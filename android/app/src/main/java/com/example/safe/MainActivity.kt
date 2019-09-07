@@ -8,6 +8,7 @@ import com.mapbox.mapboxsdk.maps.Style
 
 
 import android.annotation.SuppressLint
+import android.graphics.Color
 import android.util.Log
 import android.view.Gravity
 import android.view.ViewGroup
@@ -25,15 +26,33 @@ import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
 
 import com.mapbox.android.core.permissions.PermissionsListener
 import com.mapbox.android.core.permissions.PermissionsManager
+import com.mapbox.api.directions.v5.DirectionsCriteria
+import com.mapbox.api.directions.v5.MapboxDirections
+import com.mapbox.api.directions.v5.models.DirectionsResponse
+import com.mapbox.api.directions.v5.models.DirectionsRoute
+import com.mapbox.geojson.Feature
+import com.mapbox.geojson.LineString
+import com.mapbox.geojson.Point
 import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
 import com.mapbox.mapboxsdk.location.LocationComponentOptions
 import com.mapbox.mapboxsdk.location.modes.CameraMode
 import com.mapbox.mapboxsdk.location.modes.RenderMode
+import com.mapbox.mapboxsdk.style.layers.FillLayer
+import com.mapbox.mapboxsdk.style.layers.LineLayer
+import com.mapbox.mapboxsdk.style.layers.Property
+import com.mapbox.mapboxsdk.style.layers.PropertyFactory
+import com.mapbox.mapboxsdk.style.layers.PropertyFactory.fillColor
+import com.mapbox.mapboxsdk.style.layers.PropertyFactory.fillOpacity
+import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
+import retrofit2.Call;
+import retrofit2.Callback;
 import com.tapadoo.alerter.Alerter
 import org.json.JSONArray
 import org.json.JSONObject
+import java.net.URI
+import java.net.URISyntaxException
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListener {
 
@@ -65,11 +84,37 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
         reportButton = findViewById(R.id.view_collected_coinz_button)
     }
 
+    private fun drawPaths(style: Style) {
+        try {
+            val urbanAreasSource = GeoJsonSource(
+                "route",
+                URI("https://us-central1-safe-21981.cloudfunctions.net/paths")
+            )
+//            style.addSource(urbanAreasSource)
+//            style.addLayer(
+//                LineLayer("line-layer", "route")
+//                    .withProperties(
+//                        PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
+//                        PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
+//                        PropertyFactory.lineWidth(5f),
+//                        PropertyFactory.lineWidth(10f),
+//                        PropertyFactory.lineColor(Color.parseColor("#3369A6"))
+//                    )
+//            )
+        }
+        catch (e: Exception) {
+
+        }
+    }
+
     override fun onMapReady(mapboxMap: MapboxMap) {
         var backgroundRunnable = BackgroundRunnable(this)
         Thread(backgroundRunnable).start()
         this.mapboxMap = mapboxMap
-        mapboxMap.setStyle(Style.TRAFFIC_DAY) { enableLocationComponent(it)}
+        mapboxMap.setStyle(Style.TRAFFIC_DAY) {
+            enableLocationComponent(it)
+            drawPaths(it)
+        }
         hoveringPicker = ImageView(this)
         val picker = hoveringPicker
         picker?.setImageResource(R.drawable.mapbox_markerview_icon_default)
@@ -82,7 +127,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
 
         reportButton?.setOnClickListener {
                     var mapTargetLatLng: LatLng = mapboxMap.cameraPosition.target
-                    postNewEvent(mapTargetLatLng.latitude, mapTargetLatLng.longitude)
                     postNewEvent(mapTargetLatLng.latitude, mapTargetLatLng.longitude)
                     Alerter.create(this)
                         .setTitle("The event has been logged.")
