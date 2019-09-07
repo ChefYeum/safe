@@ -1,6 +1,6 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import {sendWarningToDevices} from './push-notification';
+import { firestore } from 'firebase-admin';
 
 admin.initializeApp(functions.config().firebase);
 const db = admin.firestore();
@@ -26,6 +26,19 @@ export const events = functions.https.onRequest((req, res) => {
                     console.log('Error getting documents', err);
                 });
             break;
+        case "POST":
+            db.collection("events").add({
+                "location":{"_latitude":req.query.latitude,"_longitude":req.query.longitude},
+                "time": firestore.FieldValue.serverTimestamp()
+            }).then(ref => {
+                console.log('Added document with ID: ', ref.id);
+            });
+            break;
+        default:
+            console.log("default")
+            console.error("No such method");
+            break;
+            
     }
 })
 
