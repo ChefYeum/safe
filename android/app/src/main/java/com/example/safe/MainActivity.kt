@@ -11,7 +11,6 @@ import android.annotation.SuppressLint
 import android.graphics.Color
 import android.util.Log
 import android.view.Gravity
-import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
@@ -21,10 +20,6 @@ import androidx.core.content.ContextCompat
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.*
-import com.google.firebase.Timestamp
-import com.google.firebase.firestore.CollectionReference
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.GeoPoint
 
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
@@ -61,13 +56,20 @@ import java.net.URISyntaxException
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListener {
 
+    private class BackgroundRunnable(val context: MainActivity): Runnable {
+        override fun run() {
+            while(true) {
+                Thread.sleep(500)
+                val result = context.getEventData()
+                Volley.newRequestQueue(context).add(result)
+            }
+        }
+    }
     private var mapView: MapView? = null
     private var hoveringPicker: ImageView? = null
     private var permissionsManager: PermissionsManager = PermissionsManager(this)
     private var reportButton: Button? = null
     private lateinit var mapboxMap: MapboxMap
-    private  var db: FirebaseFirestore = FirebaseFirestore.getInstance()
-    private var collection: CollectionReference = db.collection("events")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -106,7 +108,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
     }
 
     override fun onMapReady(mapboxMap: MapboxMap) {
-        this.getEventData()
+        var backgroundRunnable = BackgroundRunnable(this)
+        Thread(backgroundRunnable).start()
         this.mapboxMap = mapboxMap
         mapboxMap.setStyle(Style.TRAFFIC_DAY) {
             enableLocationComponent(it)
@@ -122,15 +125,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
         picker?.layoutParams = params
         mapView?.addView(picker)
 
-        reportButton?.setOnClickListener(
-            View.OnClickListener {
+        reportButton?.setOnClickListener {
                     var mapTargetLatLng: LatLng = mapboxMap.cameraPosition.target
-                    var geoPoint: GeoPoint = GeoPoint(mapTargetLatLng.latitude, mapTargetLatLng.longitude)
-                    var timeStamp: Timestamp = Timestamp.now()
-                    val docData = hashMapOf(
-                        "location" to geoPoint,
-                        "time" to timeStamp
-                    )
                     postNewEvent(mapTargetLatLng.latitude, mapTargetLatLng.longitude)
                     Alerter.create(this)
                         .setTitle("The event has been logged.")
@@ -138,7 +134,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
                         .setBackgroundColorRes(R.color.success)
                         .show()
             }
-        )
     }
 
     @SuppressLint("MissingPermission")
@@ -176,17 +171,18 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
         }
     }
 
-    private fun getEventData() {
+    private fun getEventData() :JsonObjectRequest{
         val url = "https://us-central1-safe-21981.cloudfunctions.net/events"
+
         val getDataRequest = JsonObjectRequest(Request.Method.GET, url, null,
             Response.Listener<JSONObject> { response ->
                 val jsonArray = response.getJSONArray("points")
                 handleJSONArray(jsonArray)
-           },
+            },
             Response.ErrorListener { error ->
-            Log.e("Events", error.localizedMessage)
-        })
-        Volley.newRequestQueue(this).add(getDataRequest)
+                Log.e("Events", error.localizedMessage)
+            })
+        return getDataRequest
     }
 
     private fun handleJSONArray(values : JSONArray) {
@@ -197,7 +193,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
             val longitude = location.getDouble("_longitude")
             var markerOptions = MarkerOptions()
             var latLng = LatLng(latitude, longitude)
-            markerOptions.position = latLng;
+            markerOptions.position = latLng
             mapboxMap.addMarker(markerOptions)
         }
     }
@@ -263,5 +259,4 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
         super.onDestroy()
         mapView?.onDestroy()
     }
-
 }
