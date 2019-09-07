@@ -63,6 +63,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
     }
 
     override fun onMapReady(mapboxMap: MapboxMap) {
+        this.getEventData(Response.Listener { response: JSONObject -> Log.d("Events", response.toString()) })
         this.mapboxMap = mapboxMap
         mapboxMap.setStyle(Style.TRAFFIC_DAY) { enableLocationComponent(it)}
         hoveringPicker = ImageView(this)
@@ -75,8 +76,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
         picker?.layoutParams = params
         mapView?.addView(picker)
 
-        this.getEventData(Response.Listener { response: JSONObject -> Log.d("Events", response.toString()) })
-
         reportButton?.setOnClickListener(
             View.OnClickListener {
                     var mapTargetLatLng: LatLng = mapboxMap.cameraPosition.target
@@ -86,9 +85,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
                         "location" to geoPoint,
                         "time" to timeStamp
                     )
-                    collection.document().set(docData)
-                        .addOnSuccessListener { Log.d("nice", "success") }
-                        .addOnFailureListener {e -> Log.w("oof", "failure", e)}
+                    postNewEvent(mapTargetLatLng.latitude, mapTargetLatLng.longitude)
+                    postNewEvent(mapTargetLatLng.latitude, mapTargetLatLng.longitude)
                     Alerter.create(this)
                         .setTitle("The event has been logged.")
                         .setText("Thank you for keeping others safe. Make sure you are in a safe location and move away from current dangers.")
@@ -138,7 +136,15 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
         val getDataRequest = JsonObjectRequest(Request.Method.GET, url, null, onSuccessListener,  Response.ErrorListener { error ->
             Log.e("Events", error.localizedMessage)
         })
-        Volley.newRequestQueue(this.applicationContext).add(getDataRequest)
+        Volley.newRequestQueue(this).add(getDataRequest)
+    }
+
+    private fun postNewEvent(latitude: Double, longitude: Double) {
+        val url = "https://us-central1-safe-21981.cloudfunctions.net/events?latitude=" + latitude + "&longitude=" + longitude
+        val postDataRequest = JsonObjectRequest(Request.Method.POST, url, null, Response.Listener { a -> Log.d("Events", "Success") },  Response.ErrorListener { error ->
+            Log.e("Events", error.localizedMessage)
+        })
+        Volley.newRequestQueue(this).add(postDataRequest)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
