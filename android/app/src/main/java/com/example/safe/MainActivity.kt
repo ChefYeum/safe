@@ -19,8 +19,7 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.android.volley.Request
 import com.android.volley.Response
-import com.android.volley.toolbox.JsonObjectRequest
-import com.android.volley.toolbox.Volley
+import com.android.volley.toolbox.*
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -31,12 +30,14 @@ import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
 
 import com.mapbox.android.core.permissions.PermissionsListener
 import com.mapbox.android.core.permissions.PermissionsManager
+import com.mapbox.mapboxsdk.annotations.MarkerOptions
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
 import com.mapbox.mapboxsdk.location.LocationComponentOptions
 import com.mapbox.mapboxsdk.location.modes.CameraMode
 import com.mapbox.mapboxsdk.location.modes.RenderMode
 import com.tapadoo.alerter.Alerter
+import org.json.JSONArray
 import org.json.JSONObject
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListener {
@@ -63,7 +64,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
     }
 
     override fun onMapReady(mapboxMap: MapboxMap) {
-        this.getEventData(Response.Listener { response: JSONObject -> Log.d("Events", response.toString()) })
+        this.getEventData()
         this.mapboxMap = mapboxMap
         mapboxMap.setStyle(Style.TRAFFIC_DAY) { enableLocationComponent(it)}
         hoveringPicker = ImageView(this)
@@ -131,12 +132,30 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
         }
     }
 
-    private fun getEventData(onSuccessListener: Response.Listener<JSONObject>) {
+    private fun getEventData() {
         val url = "https://us-central1-safe-21981.cloudfunctions.net/events"
-        val getDataRequest = JsonObjectRequest(Request.Method.GET, url, null, onSuccessListener,  Response.ErrorListener { error ->
+        val getDataRequest = JsonObjectRequest(Request.Method.GET, url, null,
+            Response.Listener<JSONObject> { response ->
+                val jsonArray = response.getJSONArray("points")
+                handleJSONArray(jsonArray)
+           },
+            Response.ErrorListener { error ->
             Log.e("Events", error.localizedMessage)
         })
         Volley.newRequestQueue(this).add(getDataRequest)
+    }
+
+    private fun handleJSONArray(values : JSONArray) {
+        for(i in 0 until values.length()) {
+            val jsonObject = values.getJSONObject(i)
+            val location = jsonObject.getJSONObject("location")
+            val latitude = location.getDouble("_latitude")
+            val longitude = location.getDouble("_longitude")
+            var markerOptions = MarkerOptions()
+            var latLng = LatLng(latitude, longitude)
+            markerOptions.position = latLng;
+            mapboxMap.addMarker(markerOptions)
+        }
     }
 
     private fun postNewEvent(latitude: Double, longitude: Double) {
