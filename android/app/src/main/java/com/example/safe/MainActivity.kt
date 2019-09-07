@@ -32,6 +32,7 @@ import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
 import com.mapbox.mapboxsdk.location.LocationComponentOptions
 import com.mapbox.mapboxsdk.location.modes.CameraMode
 import com.mapbox.mapboxsdk.location.modes.RenderMode
+import com.tapadoo.alerter.Alerter
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListener {
 
@@ -81,6 +82,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
                     collection.document().set(docData)
                         .addOnSuccessListener { Log.d("nice", "success") }
                         .addOnFailureListener {e -> Log.w("oof", "failure", e)}
+                    Alerter.create(this)
+                        .setTitle("The event has been logged.")
+                        .setText("Thank you for keeping others safe. Make sure you are in a safe location and move away from current dangers.")
+                        .setBackgroundColorRes(R.color.success)
+                        .show()
             }
         )
     }
