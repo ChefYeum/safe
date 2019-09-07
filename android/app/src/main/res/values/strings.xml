@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Safe</string>
+    <string name="pusher_instance_id">3e44d417-0f2c-4f86-830b-4384e60a183c"</string>
     <string name="mapbox_access_token">pk.eyJ1IjoiYm5lbG8xMiIsImEiOiJjam8wZmowd3cwMGJpM2xtb3kzd2JnanVnIn0.srR9vOcLSHHPqwHKJf2lyg</string>
     <string name="user_location_permission_explanation">aye shite explanation</string>
     <string name="user_location_permission_not_granted">Location services permission not granted.</string>
