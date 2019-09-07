@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { sendWarningToDevices } from './push-notification'
+import { sendMessage } from './sms'
 
 admin.initializeApp(functions.config().firebase);
 const db = admin.firestore();
@@ -32,9 +33,20 @@ export const events = functions.https.onRequest((req, res) => {
             });
             break;
         default:
-            console.log("default")
             console.error("No such method");
             break;
+            
+    }
+})
+
+export const sms = functions.https.onRequest((req, res) => {
+    console.log(`== sender: ${JSON.stringify(req.query)}`)
+    switch (req.method){
+        case "GET":
+            sendMessage(req.query.num)
+            break;
+        default:
+            console.error("No such method supported");
             
     }
 })
