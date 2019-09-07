@@ -1,14 +1,34 @@
 import * as functions from 'firebase-functions';
+import * as admin from 'firebase-admin';
+
+admin.initializeApp(functions.config().firebase);
+const db = admin.firestore();
 
 // // Start writing Firebase Functions
 // // https://firebase.google.com/docs/functions/typescript
-//
-export const helloWorld = functions.https.onRequest((request, response) => {
+
+export const hw = functions.https.onRequest((request, response) => {
     response.send("Hello from Firebase!");
 });
 
+export const events = functions.https.onRequest((req, res) => {
+    switch (req.method){
+        case "GET":
+            db.collection("events").get()
+                .then(snapshot => {
+                    let features: Object[] = [];
+                    snapshot.forEach(doc => {
+                        features.push(doc.data());
+                    });
+                    res.send({"type": "FeatureCollection",
+                                "features": features}); 
+                }).catch(err => {
+                    console.log('Error getting documents', err);
+                });
+            break;
+    }
+})
 
-// getAll function
+
 // postOne function
 // compatible with GeoJSON
-
