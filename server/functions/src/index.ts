@@ -5,13 +5,6 @@ import { sendWarningToDevices } from './push-notification'
 admin.initializeApp(functions.config().firebase);
 const db = admin.firestore();
 
-// // Start writing Firebase Functions
-// // https://firebase.google.com/docs/functions/typescript
-
-export const hw = functions.https.onRequest((request, response) => {
-    response.send("Hello from Firebase!");
-});
-
 export const events = functions.https.onRequest((req, res) => {
     switch (req.method){
         case "GET":
