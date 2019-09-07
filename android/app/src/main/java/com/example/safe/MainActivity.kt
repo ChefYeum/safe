@@ -8,14 +8,26 @@ import com.mapbox.mapboxsdk.maps.Style
 
 
 import android.annotation.SuppressLint
+import android.util.Log
+import android.view.Gravity
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Button
+import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import com.google.firebase.Timestamp
+import com.google.firebase.firestore.CollectionReference
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.GeoPoint
 
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
 
 import com.mapbox.android.core.permissions.PermissionsListener
 import com.mapbox.android.core.permissions.PermissionsManager
+import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions
 import com.mapbox.mapboxsdk.location.LocationComponentOptions
 import com.mapbox.mapboxsdk.location.modes.CameraMode
@@ -24,9 +36,12 @@ import com.mapbox.mapboxsdk.location.modes.RenderMode
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListener {
 
     private var mapView: MapView? = null
-
+    private var hoveringPicker: ImageView? = null
     private var permissionsManager: PermissionsManager = PermissionsManager(this)
+    private var reportButton: Button? = null
     private lateinit var mapboxMap: MapboxMap
+    private  var db: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private var collection: CollectionReference = db.collection("events")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,12 +53,36 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
         mapView = findViewById<MapView>(R.id.mapView)
         mapView?.onCreate(savedInstanceState)
         mapView?.getMapAsync(this)
+        reportButton = findViewById(R.id.view_collected_coinz_button)
     }
 
     override fun onMapReady(mapboxMap: MapboxMap) {
-
         this.mapboxMap = mapboxMap
         mapboxMap.setStyle(Style.TRAFFIC_DAY) { enableLocationComponent(it)}
+        hoveringPicker = ImageView(this)
+        val picker = hoveringPicker
+        picker?.setImageResource(R.drawable.mapbox_markerview_icon_default)
+        var params: FrameLayout.LayoutParams  = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            Gravity.CENTER)
+        picker?.layoutParams = params
+        mapView?.addView(picker)
+
+        reportButton?.setOnClickListener(
+            View.OnClickListener {
+                    var mapTargetLatLng: LatLng = mapboxMap.cameraPosition.target
+                    var geoPoint: GeoPoint = GeoPoint(mapTargetLatLng.latitude, mapTargetLatLng.longitude)
+                    var timeStamp: Timestamp = Timestamp.now()
+                    val docData = hashMapOf(
+                        "location" to geoPoint,
+                        "time" to timeStamp
+                    )
+                    collection.document().set(docData)
+                        .addOnSuccessListener { Log.d("nice", "success") }
+                        .addOnFailureListener {e -> Log.w("oof", "failure", e)}
+            }
+        )
     }
 
     @SuppressLint("MissingPermission")

@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "745637720573",
+    "firebase_url": "https://safe-21981.firebaseio.com",
+    "project_id": "safe-21981",
+    "storage_bucket": "safe-21981.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:745637720573:android:1dab99a456a4666b662994",
+        "android_client_info": {
+          "package_name": "com.example.safe"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "745637720573-tg7ab2ej05qp6id636dja5lo9tugh3j6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1DNrgIJvL_S-pPbzDnLKC9dhf8pLyb0s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "745637720573-tg7ab2ej05qp6id636dja5lo9tugh3j6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
