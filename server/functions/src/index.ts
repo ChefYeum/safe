@@ -1,6 +1,5 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { firestore } from 'firebase-admin';
 import { sendWarningToDevices } from './push-notification'
 
 admin.initializeApp(functions.config().firebase);
@@ -18,7 +17,7 @@ export const events = functions.https.onRequest((req, res) => {
         case "GET":
             db.collection("events").get()
                 .then(snapshot => {
-                    let points: Object[] = [];
+                    const points: Object[] = [];
                     snapshot.forEach(doc => {
                         points.push(doc.data());
                     });
@@ -30,10 +29,13 @@ export const events = functions.https.onRequest((req, res) => {
         case "POST":
             db.collection("events").add({
                 "location":{"_latitude":req.query.latitude,"_longitude":req.query.longitude},
-                "time": firestore.FieldValue.serverTimestamp()
+                "time": admin.firestore.FieldValue.serverTimestamp()
             }).then(ref => {
                 console.log('Added document with ID: ', ref.id);
-                sendWarningToDevices();
+                res.send({});
+                return sendWarningToDevices();
+            }).catch(err => {
+                console.log('Error getting documents', err);
             });
             break;
         default:
