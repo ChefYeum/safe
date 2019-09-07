@@ -17,6 +17,10 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.Volley
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
@@ -33,6 +37,7 @@ import com.mapbox.mapboxsdk.location.LocationComponentOptions
 import com.mapbox.mapboxsdk.location.modes.CameraMode
 import com.mapbox.mapboxsdk.location.modes.RenderMode
 import com.tapadoo.alerter.Alerter
+import org.json.JSONObject
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListener {
 
@@ -69,6 +74,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
             Gravity.CENTER)
         picker?.layoutParams = params
         mapView?.addView(picker)
+
+        this.getEventData(Response.Listener { response: JSONObject -> Log.d("Events", response.toString()) })
 
         reportButton?.setOnClickListener(
             View.OnClickListener {
@@ -124,6 +131,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
             permissionsManager = PermissionsManager(this)
             permissionsManager.requestLocationPermissions(this)
         }
+    }
+
+    private fun getEventData(onSuccessListener: Response.Listener<JSONObject>) {
+        val url = "https://us-central1-safe-21981.cloudfunctions.net/events"
+        val getDataRequest = JsonObjectRequest(Request.Method.GET, url, null, onSuccessListener,  Response.ErrorListener { error ->
+            Log.e("Events", error.localizedMessage)
+        })
+        Volley.newRequestQueue(this.applicationContext).add(getDataRequest)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
