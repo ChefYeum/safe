@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Safe</string>
+    <string name="mapbox_access_token">pk.eyJ1IjoiYm5lbG8xMiIsImEiOiJjam8wZmowd3cwMGJpM2xtb3kzd2JnanVnIn0.srR9vOcLSHHPqwHKJf2lyg</string>
 </resources>
