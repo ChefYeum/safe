@@ -16,12 +16,11 @@ export const events = functions.https.onRequest((req, res) => {
         case "GET":
             db.collection("events").get()
                 .then(snapshot => {
-                    let features: Object[] = [];
+                    let points: Object[] = [];
                     snapshot.forEach(doc => {
-                        features.push(doc.data());
+                        points.push(doc.data());
                     });
-                    res.send({"type": "FeatureCollection",
-                                "features": features}); 
+                    res.send({"points": points}); 
                 }).catch(err => {
                     console.log('Error getting documents', err);
                 });
