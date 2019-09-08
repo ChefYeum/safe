@@ -3,7 +3,7 @@ const http = require('https');
 
 let req = http.get("https://us-central1-safe-21981.cloudfunctions.net/events", function(res) {
 	var dataset = [];
-	var timeInterval = 4000;
+	var timeInterval = 30*60;
 
 	let data = '',
 		json_data;
@@ -27,20 +27,36 @@ let req = http.get("https://us-central1-safe-21981.cloudfunctions.net/events", f
 			return a[0]-b[0]
 		});
 
-		while(true){
-			var first = dataset[0][0];
-			console.log(first) //time comes first
-			var bucket = dataset.filter(([time, lat, lng]) => time <= first + timeInterval)
-			console.log(bucket)
-			console.log(bucket.length)
+		function getBuckets(timeInterval, arr, output) {
+			if (arr.length === 0) {
+				return output
+			}
+
+			if (arr.length === 1) {
+				output.push(arr[0]);
+				return output;
+			}
+
+			var first = arr[0][0];
+			var bucket = arr.filter(([time, lat, lng]) => time <= first + timeInterval);
+			output.push(bucket);
+			reduced_arr = arr.slice(bucket.length, arr.length-1);
+			return getBuckets(timeInterval, reduced_arr, output);
 		}
 
-		datasetCoordinates = dataset.map(([time, lat, lng]) => [lat, lng]);
-		const pca = new PCA(datasetCoordinates);
-		
-		// console.log(pca.getExplainedVariance());
-		// console.log(pca.getEigenvectors());
+		const dataByTime = getBuckets(timeInterval, dataset, []);
 
+		console.log(dataByTime);
+
+		pcaMatrices = [];
+
+		for (let item in dataByTime) {
+			var dataCoordinates = dataByTime[item].map(([time, lat, lng]) => [lat, lng]);
+			const pca = new PCA(dataCoordinates);
+			eigenvectors = pca.getEigenvectors();
+			pcaMatrices.push(eigenvectors);
+		}
+		console.log(pcaMatrices);
 	});
 });
 
