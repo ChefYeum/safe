@@ -14,7 +14,6 @@ import android.graphics.Color
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.util.Log
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.*
@@ -209,8 +208,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
                 val jsonArray = response.getJSONArray("points")
                 handleJSONArray(jsonArray)
             },
-            Response.ErrorListener { error ->
-            })
+            Response.ErrorListener { _ -> })
         return getDataRequest
     }
 
@@ -230,18 +228,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
 
     private fun postNewEvent(latitude: Double, longitude: Double) {
         val url = "https://us-central1-safe-21981.cloudfunctions.net/events?latitude=" + latitude + "&longitude=" + longitude
-        val postDataRequest = JsonObjectRequest(Request.Method.POST, url, null, Response.Listener { a -> Log.d("Events", "Success") },  Response.ErrorListener { error ->
-            Log.e("Events", error.localizedMessage)
-        })
+        val postDataRequest = JsonObjectRequest(Request.Method.POST, url, null, null,  null)
         Volley.newRequestQueue(this).add(postDataRequest)
     }
 
     private fun postNewSMS(latitude: Double, longitude: Double) {
         val url = "https://us-central1-safe-21981.cloudfunctions.net/sms?num=447475232777" +
                 "&latitude=" + latitude + "&longitude=" + longitude
-            val postDataRequest = JsonObjectRequest(Request.Method.GET, url, null, Response.Listener { a -> Log.d("SMS", "Success") },  Response.ErrorListener { error ->
-                Log.e("SMS", error.localizedMessage)
-            })
+            val postDataRequest = JsonObjectRequest(Request.Method.GET, url, null, null, null)
         try {
             Volley.newRequestQueue(this).add(postDataRequest)
             Alerter.create(this)
