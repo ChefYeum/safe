@@ -2,7 +2,7 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { sendWarningToDevices } from './push-notification'
 import { sendTest} from './sms'
-import {getPathPoints} from './pca-analysis.js';
+import {getPathPoints} from './pca-analysis';
 
 admin.initializeApp(functions.config().firebase);
 const db = admin.firestore();
@@ -41,7 +41,8 @@ export const events = functions.https.onRequest((req, res) => {
 });
 
 export const paths = functions.https.onRequest((req, res) => {
-        getPathPoints.then(points => {
+        getPathPoints(5000).then(points => {
+            console.log(points)
             return res.send({
                 "type": "Feature",
                 "properties": {},

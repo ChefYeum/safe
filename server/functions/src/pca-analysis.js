@@ -1,7 +1,7 @@
 const { PCA } = require('ml-pca');
 const http = require('https');
 
-export const getPathPoints = (timeInterval) => {
+export function getPathPoints(timeInterval) {
 	return new Promise((resolve, reject) => {
 		let req = http.get("https://us-central1-safe-21981.cloudfunctions.net/events", function(res) {
 			var dataset = [];
@@ -33,14 +33,14 @@ export const getPathPoints = (timeInterval) => {
 					}
 		
 					if (arr.length === 1) {
-						output.push(arr[0]);
+						// output.push(arr[0]);
 						return output;
 					}
 		
 					var first = arr[0][0];
 					var bucket = arr.filter(([time, lat, lng]) => time <= first + timeInterval);
 					output.push(bucket);
-					reduced_arr = arr.slice(bucket.length, arr.length-1);
+					const reduced_arr = arr.slice(bucket.length, arr.length-1);
 					return getBuckets(timeInterval, reduced_arr, output);
 				}
 		
@@ -48,8 +48,11 @@ export const getPathPoints = (timeInterval) => {
 				const buckets = getBuckets(timeInterval, dataset, []);
 				var output = [];
 				for (let i in buckets) {
+					if (buckets[i].length <= 1) {
+						continue;
+					}
 					const pca = new PCA(buckets[i]);
-					eigenvectors = pca.getEigenvectors();
+					const eigenvectors = pca.getEigenvectors();
 					const principleComponent = Object.values(eigenvectors)[0][0]
 					let minPoint = null;
 					let minSize = Number.POSITIVE_INFINITY;
@@ -73,8 +76,8 @@ export const getPathPoints = (timeInterval) => {
 					if (minPoint[0] > maxPoint[0]) {
 						[minPoint, maxPoint] = [maxPoint, minPoint];
 					}
-					output.push([minPoint[1], minPoint[2]]);
-					output.push([maxPoint[1], maxPoint[2]]);
+					output.unshift([minPoint[2], minPoint[1]]);
+					output.unshift([maxPoint[2], maxPoint[1]]);
 				}
 				resolve(output)
 			});
