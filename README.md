@@ -3,8 +3,7 @@ PennApps XX team
 
 ## Inspiration
 
-### There have been 289 mass shootings in the US so far in 2019.
-### 313 deaths and 1209 injuries have occurred from mass shootings alone since January.
+### There have been 289 mass shootings in the US so far in 2019; 313 deaths and 1209 injuries have occurred from mass shootings alone since January.
 
 __Source: Gun Violence Archive__
 
