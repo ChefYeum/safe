@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { sendWarningToDevices } from './push-notification'
-import { sendTest} from './sms'
+import { sendMsg } from './sms'
 
 admin.initializeApp(functions.config().firebase);
 const db = admin.firestore();
@@ -70,13 +70,11 @@ export const paths = functions.https.onRequest((req, res) => {
         });
 });
 
-export const sms = functions.https.onRequest(async (req, res) => {
-    console.log(`== sender: ${JSON.stringify(req.query)}`)
+export const sms = functions.https.onRequest((req, res) => {
     switch (req.method){
         case "GET":
-            console.log("HERE")
-            sendTest()
-            res.send({})
+            sendMsg(req.query.num, Number.parseFloat(req.query.latitude), Number.parseFloat(req.query.latitude))
+            .catch(console.error)
             break;
         default:
             console.error("No such method supported");
