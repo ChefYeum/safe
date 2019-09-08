@@ -1,5 +1,6 @@
 package com.example.safe
 
+import android.Manifest
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.mapbox.mapboxsdk.Mapbox
@@ -8,7 +9,11 @@ import com.mapbox.mapboxsdk.maps.Style
 
 
 import android.annotation.SuppressLint
-import android.graphics.Color
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.telephony.TelephonyManager
 import android.util.Log
 import android.view.Gravity
 import android.view.ViewGroup
@@ -16,12 +21,14 @@ import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.PermissionChecker.checkCallingOrSelfPermission
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.*
 
-import com.mapbox.mapboxsdk.maps.MapboxMap;
+import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback
 
 import com.mapbox.android.core.permissions.PermissionsListener
@@ -46,22 +53,25 @@ import com.mapbox.mapboxsdk.style.layers.PropertyFactory
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory.fillColor
 import com.mapbox.mapboxsdk.style.layers.PropertyFactory.fillOpacity
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
-import retrofit2.Call;
-import retrofit2.Callback;
+import retrofit2.Callback
 import com.tapadoo.alerter.Alerter
 import org.json.JSONArray
 import org.json.JSONObject
 import java.net.URI
-import java.net.URISyntaxException
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListener {
 
     private class BackgroundRunnable(val context: MainActivity): Runnable {
         override fun run() {
             while(true) {
-                Thread.sleep(500)
-                val result = context.getEventData()
-                Volley.newRequestQueue(context).add(result)
+                try {
+                    Thread.sleep(500)
+                    val result = context.getEventData()
+                    Volley.newRequestQueue(context).add(result)
+                }
+                catch (e :Exception) {
+                    // do nothing
+                }
             }
         }
     }
@@ -69,19 +79,27 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
     private var hoveringPicker: ImageView? = null
     private var permissionsManager: PermissionsManager = PermissionsManager(this)
     private var reportButton: Button? = null
+    private var messageButton: Button? = null
+    private lateinit var callButton: Button
     private lateinit var mapboxMap: MapboxMap
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         Mapbox.getInstance(this, getString(R.string.mapbox_access_token))
-
         setContentView(R.layout.activity_main)
-
         mapView = findViewById<MapView>(R.id.mapView)
         mapView?.onCreate(savedInstanceState)
         mapView?.getMapAsync(this)
         reportButton = findViewById(R.id.view_collected_coinz_button)
+        messageButton = findViewById(R.id.message_button)
+        messageButton?.setOnClickListener {
+            postNewSMS(1.0,1.0)
+        }
+        callButton = findViewById(R.id.call_button)
+        callButton.setOnClickListener {
+            postNewCallToHelpHotline()
+        }
+
     }
 
     private fun drawPaths(style: Style) {
@@ -118,7 +136,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
         hoveringPicker = ImageView(this)
         val picker = hoveringPicker
         picker?.setImageResource(R.drawable.mapbox_markerview_icon_default)
-        var params: FrameLayout.LayoutParams  = FrameLayout.LayoutParams(
+        val params: FrameLayout.LayoutParams  = FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
             ViewGroup.LayoutParams.WRAP_CONTENT,
             Gravity.CENTER)
@@ -126,7 +144,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
         mapView?.addView(picker)
 
         reportButton?.setOnClickListener {
-                    var mapTargetLatLng: LatLng = mapboxMap.cameraPosition.target
+                    val mapTargetLatLng: LatLng = mapboxMap.cameraPosition.target
                     postNewEvent(mapTargetLatLng.latitude, mapTargetLatLng.longitude)
                     Alerter.create(this)
                         .setTitle("The event has been logged.")
@@ -191,8 +209,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
             val location = jsonObject.getJSONObject("location")
             val latitude = location.getDouble("_latitude")
             val longitude = location.getDouble("_longitude")
-            var markerOptions = MarkerOptions()
-            var latLng = LatLng(latitude, longitude)
+            val markerOptions = MarkerOptions()
+            val latLng = LatLng(latitude, longitude)
             markerOptions.position = latLng
             mapboxMap.addMarker(markerOptions)
         }
@@ -204,6 +222,32 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
             Log.e("Events", error.localizedMessage)
         })
         Volley.newRequestQueue(this).add(postDataRequest)
+    }
+
+    private fun postNewSMS(latitude: Double, longitude: Double) {
+        val url = "https://us-central1-safe-21981.cloudfunctions.net/sms?num=+447475232777" +
+                "&latitude=" + latitude + "&longitude=" + longitude
+            val postDataRequest = JsonObjectRequest(Request.Method.GET, url, null, Response.Listener { a -> Log.d("SMS", "Success") },  Response.ErrorListener { error ->
+                Log.e("SMS", error.localizedMessage)
+            })
+        Volley.newRequestQueue(this).add(postDataRequest)
+    }
+
+    private fun postNewCallToHelpHotline() {
+        if (checkCallingOrSelfPermission(Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                this, arrayOf(Manifest.permission.CALL_PHONE), 1)
+        } else {
+            if (shouldShowRequestPermissionRationale(Manifest.permission.CALL_PHONE)) {
+                Toast.makeText(
+                    this, "Phone permissions is needed to connect you with a Mental Health hotline",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            var callIntent = Intent(Intent.ACTION_CALL)
+            callIntent.setData(Uri.parse("tel:" + 9196721167))
+            startActivity(callIntent)
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
