@@ -82,7 +82,8 @@ export const sms = functions.https.onRequest((req, res) => {
     console.log(`== sender: ${JSON.stringify(req.query)}`)
     switch (req.method){
         case "GET":
-            sendMessage(req.query.num)
+            sendMessage(req.query.num, req.query.latitude, req.query.longitude)
+            .catch(console.error)
             break;
         default:
             console.error("No such method supported");
@@ -114,3 +115,7 @@ export const sms = functions.https.onRequest((req, res) => {
 //             break;
 //     }
 // })
+
+// const geoInfoTest = functions.https.onRequest(async (req,res) => {
+//     res.send(await getGeoInfo())
+// });
