@@ -54,7 +54,7 @@ export const paths = functions.https.onRequest((req, res) => {
                 "time": number}>;
         }).then(points => {
             return points.sort((a, b) => {
-                return a.time < b.time ? -1 : (b.time > a.time ? 1 : 0)
+                return a.time < b.time ? -1 : (b.time < a.time ? 1 : 0)
             })
         }).then(points => {
             return res.send({
@@ -80,7 +80,6 @@ export const sms = functions.https.onRequest((req, res) => {
             break;
         default:
             console.error("No such method supported");
-            
     }
 })
 
