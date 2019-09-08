@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { sendWarningToDevices } from './push-notification'
-import { sendMessage } from './sms'
+import { sendTest} from './sms'
 
 admin.initializeApp(functions.config().firebase);
 const db = admin.firestore();
@@ -70,13 +70,12 @@ export const paths = functions.https.onRequest((req, res) => {
         });
 });
 
-export const sms = functions.https.onRequest((req, res) => {
+export const sms = functions.https.onRequest(async (req, res) => {
     console.log(`== sender: ${JSON.stringify(req.query)}`)
     switch (req.method){
         case "GET":
             console.log("HERE")
-            sendMessage(req.query.num, req.query.latitude, req.query.longitude)
-            .catch(console.error)
+            sendTest()
             res.send({})
             break;
         default:

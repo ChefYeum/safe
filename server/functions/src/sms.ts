@@ -10,21 +10,33 @@ const TWIL_AUTH_TOKEN = process.env.TWIL_AUTH_TOKEN;
 const TWIL_NUM = process.env.TWIL_NUM
 // const MBX_TOKEN = process.env.MBX_TOKEN
 
-export async function sendMessage(to: string, latitude: number, longitude: number, from=TWIL_NUM){
+export async function sendMessage(toNum: String, latitude: number, longitude: number, fromNum=TWIL_NUM){
     const client = twilio(TWIL_ID, TWIL_AUTH_TOKEN);
     const address = await getGeoInfo(latitude, longitude)
-    console.log(`= address: ${address}`)
+    console.log(`= address: ${address}`);
     const feature = address.features[1]["place_name"];
-    console.log(`= feature: ${feature}`)
+    console.log(`= feature: ${feature}`);
+    console.log(`=== ${toNum}`);
+    console.log(`=== ${fromNum}`);
     client.messages.create({
         body: `A gun holder reported at ${feature}`,
-        to: to,  // Text this number
-        from: from  // From a valid Twilio number
+        to: '+447475232777',  // Text this number
+        from: fromNum  // From a valid Twilio number
     })
     .then(message => (message.sid))
     .catch(err => {
         console.log(`error: ${err}`)
     })
+}
+
+export function sendTest(){
+    const client = twilio(TWIL_ID, TWIL_AUTH_TOKEN);
+    client.messages.create({
+        body: 'Hello from Node',
+        to: '+447475232777',  // Text this number
+        from: '+441143032335' // From a valid Twilio number
+    })
+    .then((message) => console.log(message.sid));
 }
 
 const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding')
