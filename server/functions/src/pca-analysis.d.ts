@@ -1,0 +1,1 @@
+export function getPathPoints(timestamp: number): Promise<Array<any>>;

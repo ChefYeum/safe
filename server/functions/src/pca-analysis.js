@@ -1,57 +1,88 @@
 const { PCA } = require('ml-pca');
 const http = require('https');
 
-let req = http.get("https://us-central1-safe-21981.cloudfunctions.net/events", function(res) {
-	var dataset = [];
-	var timeInterval = 4000;
-
-	let data = '',
-		json_data;
-
-	res.on('data', function(stream) {
-		data += stream;
-	});
-	res.on('end', function() {
-		json_data = JSON.parse(data);
-		// console.log(Object.values(json_data)[0][1]);
-
-		var points = Object.values(json_data)[0];
-
-		for(let prop in points ){
-			const row = [points[prop]['time'], Number.parseFloat(points[prop]['location']['_latitude']), Number.parseFloat(points[prop]['location']['_longitude'])];
-			dataset.push(row);
-		};
-
-		// sorts by timestamp (first column)
-		dataset.sort(function(a,b) {
-			return a[0]-b[0]
-		});
-
-		while(true){
-			var first = dataset[0][0];
-			console.log(first) //time comes first
-			var bucket = dataset.filter(([time, lat, lng]) => time <= first + timeInterval)
-			console.log(bucket)
-			console.log(bucket.length)
-		}
-
-		datasetCoordinates = dataset.map(([time, lat, lng]) => [lat, lng]);
-		const pca = new PCA(datasetCoordinates);
+export function getPathPoints(timeInterval) {
+	return new Promise((resolve, reject) => {
+		let req = http.get("https://us-central1-safe-21981.cloudfunctions.net/events", function(res) {
+			var dataset = [];
 		
-		// console.log(pca.getExplainedVariance());
-		// console.log(pca.getEigenvectors());
-
-	});
-});
-
-req.on('error', function(e) {
-    console.log(e.message);
-});
-
-// dataset is a two-dimensional array where rows represent the samples and columns the features
-
-//const pca = new PCA(dataset);
-//console.log(pca.getExplainedVariance());
-
-//const newPoints = [[4.9, 3.2, 1.2, 0.4], [5.4, 3.3, 1.4, 0.9]];
-//console.log(pca.predict(newPoints));
+			let data = '',
+				json_data;
+		
+			res.on('data', function(stream) {
+				data += stream;
+			});
+			res.on('end', function() {
+				json_data = JSON.parse(data);
+		
+				var points = Object.values(json_data)[0];
+		
+				for(let prop in points ){
+					const row = [points[prop]['time'], Number.parseFloat(points[prop]['location']['_latitude']), Number.parseFloat(points[prop]['location']['_longitude'])];
+					dataset.push(row);
+				};
+		
+				// sorts by timestamp (first column)
+				dataset.sort(function(a,b) {
+					return a[0]-b[0]
+				});
+		
+				function getBuckets(timeInterval, arr, output) {
+					if (arr.length === 0) {
+						return output
+					}
+		
+					if (arr.length === 1) {
+						// output.push(arr[0]);
+						return output;
+					}
+		
+					var first = arr[0][0];
+					var bucket = arr.filter(([time, lat, lng]) => time <= first + timeInterval);
+					output.push(bucket);
+					const reduced_arr = arr.slice(bucket.length, arr.length-1);
+					return getBuckets(timeInterval, reduced_arr, output);
+				}
+		
+				// these are all the timed buckets
+				const buckets = getBuckets(timeInterval, dataset, []);
+				var output = [];
+				for (let i in buckets) {
+					if (buckets[i].length <= 1) {
+						continue;
+					}
+					const pca = new PCA(buckets[i]);
+					const eigenvectors = pca.getEigenvectors();
+					const principleComponent = Object.values(eigenvectors)[0][0]
+					let minPoint = null;
+					let minSize = Number.POSITIVE_INFINITY;
+					let maxPoint = null;
+					let maxSize = Number.NEGATIVE_INFINITY;
+					for (let point of buckets[i]) {
+						const [pcaX, pcaY] = principleComponent
+						const [_, x, y] = point;
+						const dotProduct = pcaX*x + pcaY*y
+						const mag = Math.sqrt(x*x + y*y);
+						const projection = dotProduct/mag;
+						if (minSize > projection) {
+							minSize = projection;
+							minPoint = point;
+						}
+						if (maxSize < projection) {
+							maxSize = projection;
+							maxPoint = point;
+						}
+					}
+					if (minPoint[0] > maxPoint[0]) {
+						[minPoint, maxPoint] = [maxPoint, minPoint];
+					}
+					output.unshift([minPoint[2], minPoint[1]]);
+					output.unshift([maxPoint[2], maxPoint[1]]);
+				}
+				resolve(output)
+			});
+		});
+		
+		req.on('error', reject);
+	})
+}
