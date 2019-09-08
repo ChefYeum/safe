@@ -45,6 +45,28 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <Button
+        android:id="@+id/message_button"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:background="@drawable/message_button"
+        app:layout_constraintBottom_toTopOf="@id/view_collected_coinz_button"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginRight="40dp"
+        android:layout_marginBottom="20dp"
+        android:text="Text"/>
+
+    <Button
+        android:id="@+id/call_button"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:background="@drawable/message_button"
+        app:layout_constraintBottom_toTopOf="@id/message_button"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_marginRight="40dp"
+        android:layout_marginBottom="20dp"
+        android:text="Call"/>
+
+    <Button
         android:id="@+id/view_collected_coinz_button"
         android:layout_marginLeft="40dp"
         android:layout_marginRight="40dp"
@@ -55,6 +77,6 @@
         android:background="@drawable/report_button"
         android:text="Report Active Event"
         android:textColor="@color/colorAccent"
-        android:textSize="18sp" />
+        android:textSize="18sp"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -3,6 +3,8 @@
     package="com.example.safe">
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.CALL_PHONE"/>
     <application
         android:name=".SafeApplication"
         android:allowBackup="true"
