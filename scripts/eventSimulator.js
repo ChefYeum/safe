@@ -1,5 +1,4 @@
 const request = require('request');
-const sleep = require('sleep');
 
 function simEvt(longitude, latitude) {
     request.post(`https://us-central1-safe-21981.cloudfunctions.net/events?latitude=${latitude}&longitude=${longitude}`)
@@ -13,6 +12,14 @@ const args = [
     [-75.18963976101864, 39.953939111316295]
 ]
 
-// for (arg of args) {
-//     simEvt(...arg);
-// }
+var idx = 0;
+
+const generate = () => {
+    setTimeout(() => {
+        if (idx < args.length) {
+            simEvt(...args);
+            generate();
+            idx++;
+        }
+    }, Math.random()*3000)
+}

@@ -7,26 +7,18 @@ import com.mapbox.mapboxsdk.Mapbox
 import com.mapbox.mapboxsdk.maps.MapView
 import com.mapbox.mapboxsdk.maps.Style
 
-
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.telephony.TelephonyManager
-import android.util.Log
 import android.view.Gravity
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.FrameLayout
-import android.widget.ImageView
-import android.widget.Toast
+import android.widget.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.content.PermissionChecker.checkCallingOrSelfPermission
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.*
@@ -44,8 +36,6 @@ import com.mapbox.mapboxsdk.location.modes.CameraMode
 import com.mapbox.mapboxsdk.location.modes.RenderMode
 import com.mapbox.mapboxsdk.style.layers.*
 import com.mapbox.mapboxsdk.style.sources.GeoJsonSource
-
-import retrofit2.Callback
 import com.tapadoo.alerter.Alerter
 import org.json.JSONArray
 import org.json.JSONObject
@@ -61,7 +51,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
                     val result = context.getEventData()
                     Volley.newRequestQueue(context).add(result)
                 }
-                catch (e :Exception) {
+                catch (e: Exception) {
                     // do nothing
                 }
             }
@@ -71,20 +61,24 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
     private class StylesRunnable(val context: MainActivity): Runnable {
         override fun run() {
             while(true) {
-                Thread.sleep(5000)
-                context.runOnUiThread({
-                    context.updateStyles()
-                })
+                try {
+                    Thread.sleep(5000)
+                    context.runOnUiThread {
+                        context.updateStyles()
+                    }
+                } catch (e: Exception) {
+                    // do nothing
+                }
             }
         }
     }
 
     private var mapView: MapView? = null
-    private var hoveringPicker: ImageView? = null
+    private var hoveringMarker: ImageView? = null
     private var permissionsManager: PermissionsManager = PermissionsManager(this)
     private var reportButton: Button? = null
-    private var messageButton: Button? = null
-    private lateinit var callButton: Button
+    private var messageButton: ImageButton? = null
+    private lateinit var callButton: ImageButton
     private lateinit var mapboxMap: MapboxMap
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,7 +91,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
         reportButton = findViewById(R.id.view_collected_coinz_button)
         messageButton = findViewById(R.id.message_button)
         messageButton?.setOnClickListener {
-            postNewSMS(1.0,1.0)
+            postNewSMS(mapboxMap.cameraPosition.target.latitude,
+                mapboxMap.cameraPosition.target.longitude)
         }
         callButton = findViewById(R.id.call_button)
         callButton.setOnClickListener {
@@ -118,8 +113,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
                         .withProperties(
                             PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
                             PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
-                            PropertyFactory.lineWidth(5f),
-                            PropertyFactory.lineWidth(10f),
+                            PropertyFactory.lineWidth(2f),
                             PropertyFactory.lineColor(Color.parseColor("#3369A6"))
                         )
                 )
@@ -136,24 +130,22 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
     }
 
     private fun updateStyles() {
-        if (mapboxMap != null) {
             mapboxMap.setStyle(Style.TRAFFIC_DAY) {
                 drawPaths(it)
-            }
         }
     }
 
     override fun onMapReady(mapboxMap: MapboxMap) {
-        var backgroundRunnable = BackgroundRunnable(this)
+        val backgroundRunnable = BackgroundRunnable(this)
         Thread(backgroundRunnable).start()
-        var stylesRunnable = StylesRunnable(this)
+        val stylesRunnable = StylesRunnable(this)
         Thread(stylesRunnable).start()
         this.mapboxMap = mapboxMap
         mapboxMap.setStyle(Style.TRAFFIC_DAY) {
             enableLocationComponent(it)
         }
-        hoveringPicker = ImageView(this)
-        val picker = hoveringPicker
+        hoveringMarker = ImageView(this)
+        val picker = hoveringMarker
         picker?.setImageResource(R.drawable.mapbox_markerview_icon_default)
         val params: FrameLayout.LayoutParams  = FrameLayout.LayoutParams(
             ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -216,13 +208,11 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
                 val jsonArray = response.getJSONArray("points")
                 handleJSONArray(jsonArray)
             },
-            Response.ErrorListener { error ->
-                Log.e("Events", error.localizedMessage)
-            })
+            Response.ErrorListener { _ -> })
         return getDataRequest
     }
 
-    private fun handleJSONArray(values : JSONArray) {
+    private fun handleJSONArray(values: JSONArray) {
         mapboxMap.clear()
         for(i in 0 until values.length()) {
             val jsonObject = values.getJSONObject(i)
@@ -238,19 +228,26 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
 
     private fun postNewEvent(latitude: Double, longitude: Double) {
         val url = "https://us-central1-safe-21981.cloudfunctions.net/events?latitude=" + latitude + "&longitude=" + longitude
-        val postDataRequest = JsonObjectRequest(Request.Method.POST, url, null, Response.Listener { a -> Log.d("Events", "Success") },  Response.ErrorListener { error ->
-            Log.e("Events", error.localizedMessage)
-        })
+        val postDataRequest = JsonObjectRequest(Request.Method.POST, url, null, null,  null)
         Volley.newRequestQueue(this).add(postDataRequest)
     }
 
     private fun postNewSMS(latitude: Double, longitude: Double) {
-        val url = "https://us-central1-safe-21981.cloudfunctions.net/sms?num=+447475232777" +
+        val url = "https://us-central1-safe-21981.cloudfunctions.net/sms?num=447475232777" +
                 "&latitude=" + latitude + "&longitude=" + longitude
-            val postDataRequest = JsonObjectRequest(Request.Method.GET, url, null, Response.Listener { a -> Log.d("SMS", "Success") },  Response.ErrorListener { error ->
-                Log.e("SMS", error.localizedMessage)
-            })
-        Volley.newRequestQueue(this).add(postDataRequest)
+            val postDataRequest = JsonObjectRequest(Request.Method.GET, url, null, null, null)
+        try {
+            Volley.newRequestQueue(this).add(postDataRequest)
+            Alerter.create(this)
+                .setTitle("A message has been relayed to the authorities!")
+                .setText("Thank you for keeping others safe. Make sure you are in a safe location and move away from current dangers.")
+                .setIcon(R.drawable.message_bubble_icon)
+                .setBackgroundColorRes(R.color.success)
+                .show()
+        }
+        catch(e: Exception) {
+            // do nothing
+        }
     }
 
     private fun postNewCallToHelpHotline() {
@@ -264,7 +261,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
                     Toast.LENGTH_LONG
                 ).show()
             }
-            var callIntent = Intent(Intent.ACTION_CALL)
+            val callIntent = Intent(Intent.ACTION_CALL)
             callIntent.setData(Uri.parse("tel:" + 9196721167))
             startActivity(callIntent)
         }
