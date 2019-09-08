@@ -64,7 +64,7 @@ export const paths = functions.https.onRequest((req, res) => {
                     "type": "LineString",
                     "coordinates": points.map(point => [Number.parseFloat(point.location._longitude), Number.parseFloat(point.location._latitude)])
                 }
-            })
+            });
         }).catch(err => {
             console.error(err);
         });
