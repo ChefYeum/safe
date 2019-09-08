@@ -76,6 +76,7 @@ export const sms = functions.https.onRequest((req, res) => {
         case "GET":
             sendMessage(req.query.num, req.query.latitude, req.query.longitude)
             .catch(console.error)
+            res.send({})
             break;
         default:
             console.error("No such method supported");

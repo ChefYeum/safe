@@ -12,9 +12,12 @@ const TWIL_NUM = process.env.TWIL_NUM
 
 export async function sendMessage(to: string, latitude: number, longitude: number, from=TWIL_NUM){
     const client = twilio(TWIL_ID, TWIL_AUTH_TOKEN);
-    const address = (await getGeoInfo(latitude, longitude)).features[1]["place_name"];
+    const address = await getGeoInfo(latitude, longitude)
+    console.log(`= address: ${address}`)
+    const feature = address.features[1]["place_name"];
+    console.log(`= feature: ${feature}`)
     client.messages.create({
-        body: `A gun holder reported at ${address}`,
+        body: `A gun holder reported at ${feature}`,
         to: to,  // Text this number
         from: from  // From a valid Twilio number
     })
@@ -27,14 +30,11 @@ export async function sendMessage(to: string, latitude: number, longitude: numbe
 const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding')
 const geocodingClient = mbxGeocoding({accessToken: "pk.eyJ1IjoiemRyMjc4MCIsImEiOiJjazBhOWpib3QwaGM3M2RtcWk0N3pkbzVpIn0.56IaD0T14Auie8KHfI9bAw"}) 
 
-export function getGeoInfo(latitude: number, longitude: number){
+export function getGeoInfo(lat: number, long: number){
     return geocodingClient.reverseGeocode({
-    query: [latitude, longitude],
+    query: [lat, long],
     })
     .send()
-    .then((response: { body: any; }) => {
-        // GeoJSON document with geocoding matches
-        const match = response.body;
-        return match
-    }).catch(console.error)
+    .then((response: { body: any; }) => response.body)
+    .catch(console.error)
 }
