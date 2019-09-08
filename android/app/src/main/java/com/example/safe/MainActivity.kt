@@ -118,8 +118,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
                         .withProperties(
                             PropertyFactory.lineCap(Property.LINE_CAP_ROUND),
                             PropertyFactory.lineJoin(Property.LINE_JOIN_ROUND),
-                            PropertyFactory.lineWidth(5f),
-                            PropertyFactory.lineWidth(10f),
+                            PropertyFactory.lineWidth(2f),
                             PropertyFactory.lineColor(Color.parseColor("#3369A6"))
                         )
                 )
@@ -217,7 +216,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback, PermissionsListene
                 handleJSONArray(jsonArray)
             },
             Response.ErrorListener { error ->
-                Log.e("Events", error.localizedMessage)
             })
         return getDataRequest
     }
