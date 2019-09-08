@@ -59,40 +59,11 @@ export const paths = functions.https.onRequest((req, res) => {
 export const sms = functions.https.onRequest((req, res) => {
     switch (req.method){
         case "GET":
-            sendMsg(req.query.num, Number.parseFloat(req.query.latitude), Number.parseFloat(req.query.latitude))
+            sendMsg(req.query.num, Number.parseFloat(req.query.latitude), Number.parseFloat(req.query.longitude))
             .catch(console.error)
+            res.send({})
             break;
         default:
             console.error("No such method supported");
     }
 })
-
-
-// export const events_test = functions.https.onRequest((req, res) => {
-//     switch (req.method){
-//         case "GET":
-//             db.collection("events").get()
-//                 .then(snapshot => {
-//                     console.log(req.headers["radius"])
-//                     let points: any[] = [];
-//                     snapshot.forEach(doc => {
-//                         points.push(doc.data());
-//                     });
-//                     //filter radius
-//                     if (req.params.radius){
-//                         console.log(`Parameter radius=${req.params.radius} detected`)
-//                         // points.forEach(({location}) => {
-//                         //     points.push({text: `${location._latitude}, ${location._longitude}`}) 
-//                         // })
-//                     }
-//                     res.send({"points": points}); 
-//                 }).catch(err => {
-//                     console.log('Error getting documents', err);
-//                 });
-//             break;
-//     }
-// })
-
-// const geoInfoTest = functions.https.onRequest(async (req,res) => {
-//     res.send(await getGeoInfo())
-// });
