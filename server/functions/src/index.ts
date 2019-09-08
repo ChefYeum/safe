@@ -2,6 +2,7 @@ import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { sendWarningToDevices } from './push-notification'
 import { sendTest} from './sms'
+import {getPathPoints} from './pca-analysis.js';
 
 admin.initializeApp(functions.config().firebase);
 const db = admin.firestore();
@@ -40,29 +41,13 @@ export const events = functions.https.onRequest((req, res) => {
 });
 
 export const paths = functions.https.onRequest((req, res) => {
-    db.collection("events").get()
-        .then(snapshot => {
-            const points: Object[] = [];
-            snapshot.forEach(doc => {
-                points.push(doc.data());
-            });
-            return points as Array<{
-                "location": {
-                    "_latitude": string,
-                    "_longitude": string
-                },
-                "time": number}>;
-        }).then(points => {
-            return points.sort((a, b) =>  {
-                return a.time < b.time ? 1 : (b.time < a.time ?  -1 : 0)
-            })
-        }).then(points => {
+        getPathPoints.then(points => {
             return res.send({
                 "type": "Feature",
                 "properties": {},
                 "geometry": {
                     "type": "LineString",
-                    "coordinates": points.map(point => [Number.parseFloat(point.location._longitude), Number.parseFloat(point.location._latitude)])
+                    "coordinates": points
                 }
             });
         }).catch(err => {

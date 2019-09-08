@@ -1,7 +1,7 @@
 const { PCA } = require('ml-pca');
 const http = require('https');
 
-export const getPathPoint = (timeInterval) => {
+export const getPathPoints = (timeInterval) => {
 	return new Promise((resolve, reject) => {
 		let req = http.get("https://us-central1-safe-21981.cloudfunctions.net/events", function(res) {
 			var dataset = [];
