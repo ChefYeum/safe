@@ -45,10 +45,10 @@ Everything was built from scratch. No frameworks. Our project is still one of th
 
 ## Team says
 
-- Ben: "This was the biggest hackathon project I have ever done. I learned a lot."
-- Elena: "I have never dreamt of writing even vanilla ML in js. Mindblowing that it works."
-- Yoel: "I wasn't sleeping, I swear. Just debugging in my head"
-- Dee: "좋았어"
+- Ben ([bnelo12](https://github.com/bnelo12)): "This was the biggest hackathon project I have ever done. I learned a lot."
+- Elena ([elenalape](https://github.com/elenalape)): "I have never dreamt of writing even vanilla ML in js. Mindblowing that it works."
+- Yoel  ([Yoelio](https://github.com/Yoelio)): "I wasn't sleeping, I swear. Just debugging in my head"
+- Dee ([ChefYeum](https://github.com/ChefYeum)): "좋았어"
 
 ## What is next
 
@@ -60,9 +60,3 @@ We need a logo, good design, yadda yadda.
  - Native Android Material UI with Kotlin
  - NodeJS backend on Firebased (powered by Google Cloud Platform)
  - MapBox
-
-# Team
- - Ben ([bnelo12](https://github.com/bnelo12))
- - Dee ([ChefYeum](https://github.com/ChefYeum))
- - Elena ([elenalape](https://github.com/elenalape))
- - Yoel ([Yoelio](https://github.com/Yoelio))
