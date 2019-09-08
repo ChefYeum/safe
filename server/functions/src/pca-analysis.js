@@ -3,6 +3,8 @@ const http = require('https');
 
 let req = http.get("https://us-central1-safe-21981.cloudfunctions.net/events", function(res) {
 	var dataset = [];
+	var timeInterval = 4000;
+
 	let data = '',
 		json_data;
 
@@ -15,12 +17,29 @@ let req = http.get("https://us-central1-safe-21981.cloudfunctions.net/events", f
 
 		var points = Object.values(json_data)[0];
 
-		for( let prop in points ){
-			const row = [points[prop]['location']['_latitude'], points[prop]['location']['_longitude'], points[prop]['time']['_seconds']];
+		for(let prop in points ){
+			const row = [points[prop]['time'], Number.parseFloat(points[prop]['location']['_latitude']), Number.parseFloat(points[prop]['location']['_longitude'])];
 			dataset.push(row);
+		};
+
+		// sorts by timestamp (first column)
+		dataset.sort(function(a,b) {
+			return a[0]-b[0]
+		});
+
+		while(true){
+			var first = dataset[0][0];
+			console.log(first) //time comes first
+			var bucket = dataset.filter(([time, lat, lng]) => time <= first + timeInterval)
+			console.log(bucket)
+			console.log(bucket.length)
 		}
 
-		console.log(dataset);
+		datasetCoordinates = dataset.map(([time, lat, lng]) => [lat, lng]);
+		const pca = new PCA(datasetCoordinates);
+		
+		// console.log(pca.getExplainedVariance());
+		// console.log(pca.getEigenvectors());
 
 	});
 });
