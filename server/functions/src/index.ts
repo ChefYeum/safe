@@ -57,12 +57,20 @@ export const paths = functions.https.onRequest((req, res) => {
                 return a.time < b.time ? -1 : (b.time > a.time ? 1 : 0)
             })
         }).then(points => {
+            // return res.send({
+            //     "type": "Feature",
+            //     "properties": {},
+            //     "geometry": {
+            //         "type": "LineString",
+            //         "coordinates": points.map(point => [Number.parseFloat(point.location._longitude), Number.parseFloat(point.location._latitude)])
+            //     }
+            // })
             return res.send({
                 "type": "Feature",
                 "properties": {},
                 "geometry": {
                     "type": "LineString",
-                    "coordinates": points.map(point => [Number.parseFloat(point.location._longitude), Number.parseFloat(point.location._latitude)])
+                    "coordinates": [[39.963997321616226, -75.1895454319789], [39.971642898018686, -75.21344830438046], [39.96850054016287, -75.20083171574288]]
                 }
             })
         }).catch(err => {
@@ -78,7 +86,6 @@ export const sms = functions.https.onRequest((req, res) => {
             break;
         default:
             console.error("No such method supported");
-            
     }
 })
 
