@@ -53,8 +53,8 @@ export const paths = functions.https.onRequest((req, res) => {
                 },
                 "time": number}>;
         }).then(points => {
-            return points.sort((a, b) => {
-                return a.time < b.time ? -1 : (b.time < a.time ? 1 : 0)
+            return points.sort((a, b) =>  {
+                return a.time < b.time ? 1 : (b.time < a.time ?  -1 : 0)
             })
         }).then(points => {
             return res.send({
@@ -74,6 +74,7 @@ export const sms = functions.https.onRequest((req, res) => {
     console.log(`== sender: ${JSON.stringify(req.query)}`)
     switch (req.method){
         case "GET":
+            console.log("HERE")
             sendMessage(req.query.num, req.query.latitude, req.query.longitude)
             .catch(console.error)
             res.send({})
